@@ -7,6 +7,7 @@ x64
 *.ilk
 *.pdb
 *.idb
+*.exe
 *.exp
 *.lib
 *.sbr
