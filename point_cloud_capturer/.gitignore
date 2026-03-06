@@ -1,2 +1,26 @@
 x64
 x64/*
+
+# CMake builds
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Compiled objects
+*.o
+*.obj
+*.pdb
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Logs
+*.log
+
+# Do NOT ignore:
+# external/plywoot/*
+# include/*
+# calibration or camera configs

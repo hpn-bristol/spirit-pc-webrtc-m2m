@@ -1,2 +1,29 @@
-.vs
 x64
+
+# Build artefacts
+*.o
+*.obj
+*.pch
+*.ilk
+*.pdb
+*.idb
+*.exp
+*.lib
+*.sbr
+
+# Shared libraries built locally
+*.dll
+*.so
+*.dylib
+
+# Visual Studio generated
+.vs/
+*.vcxproj*
+*.sln
+
+# CMake leftovers (if used)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/

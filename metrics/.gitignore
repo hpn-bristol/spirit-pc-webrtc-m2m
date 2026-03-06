@@ -1,0 +1,12 @@
+# Go binaries
+*.exe
+*.out
+metrics_server
+bin/
+
+# Go cache
+go-build/
+
+# Logs
+*.log
+logs/

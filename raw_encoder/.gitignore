@@ -1,4 +1,23 @@
-x64
-x64/*
-build
-build/*
+x64/
+
+# CMake
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Object files
+*.o
+*.obj
+
+# Generated libs
+*.dll
+*.so
+*.dylib
+*.pdb
+*.lib
+*.exp
+
+# Logs
+*.log

@@ -12,6 +12,7 @@ dist/
 build/
 
 # Virtual environments
+.venv/
 venv/
 ENV/
 env/
@@ -38,3 +39,10 @@ uploads/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temporary experiment outputs
+runner/*.json.tmp
+*.log
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/

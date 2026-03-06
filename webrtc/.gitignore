@@ -1,0 +1,16 @@
+# Go build artefacts
+bin/
+*.exe
+*.test
+
+# Go caches
+go-build/
+*.out
+
+# Logs
+logs/
+*.log
+
+# Dashboard runtime temp files
+dashboard/*.tmp
+dashboard/static/*.tmp

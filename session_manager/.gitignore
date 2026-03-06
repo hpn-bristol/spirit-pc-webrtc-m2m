@@ -1,0 +1,21 @@
+# Go build
+bin/
+*.exe
+*.out
+
+# Logs
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Python venvs
+.venv/
+env/
+venv/
+
+# Temporary files
+uploads/
+archived_logs/

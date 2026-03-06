@@ -1,1 +1,25 @@
+.local/
 **/logs/
+
+### OS / Editor ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE metadata
+.vscode/
+.idea/
+*.code-workspace
+
+# Node
+node_modules/
+
+# Python virtual envs accidentally created at root
+.venv/
+env/
+venv/
+
+# Common backup files
+*.bak
+*.tmp
