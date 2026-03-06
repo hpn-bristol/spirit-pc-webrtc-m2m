@@ -6,8 +6,10 @@
 Thumbs.db
 *.swp
 *.swo
+tags.lock
 
 # IDE metadata
+.vs/
 .vscode/
 .idea/
 *.code-workspace
@@ -20,6 +22,20 @@ node_modules/
 env/
 venv/
 
+# Python caches (belt-and-braces)
+__pycache__/
+*.pyc
+
+# CMake build trees and state
+build/
+CMakeFiles/
+CMakeCache.txt
+
 # Common backup files
 *.bak
 *.tmp
+
+# FMOD Studio caches & user state (authoring project)
+unity/spirit_audio/.cache/
+unity/spirit_audio/.unsaved/
+unity/spirit_audio/.user/
