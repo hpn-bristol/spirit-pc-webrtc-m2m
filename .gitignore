@@ -7,6 +7,7 @@ Thumbs.db
 *.swp
 *.swo
 tags.lock
+tags.temp
 
 # IDE metadata
 .vs/
@@ -39,3 +40,5 @@ CMakeCache.txt
 unity/spirit_audio/.cache/
 unity/spirit_audio/.unsaved/
 unity/spirit_audio/.user/
+
+*.conda

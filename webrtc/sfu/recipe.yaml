@@ -1,0 +1,53 @@
+context:
+  name: ${{ load_from_file("pixi.toml").package.name | lower }}
+  version: ${{ load_from_file("pixi.toml").package.version }}
+  # Executable naming — edit to "WebRTC-peer" / "WebRTC-peer.exe" if preferred
+  exe_name: ${{ name }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  path: ".."          # parent is module root with go.mod
+  use_gitignore: true
+
+build:
+  number: 0
+  script:
+    # ---------- Unix ----------
+    - if: unix
+      then: |
+        mkdir -p "${SRC_DIR}/../build"
+        export CGO_ENABLED=${CGO_ENABLED:-0}
+        go build -trimpath -ldflags="-s -w" \
+          -o "${SRC_DIR}/../build/${{ exe_name }}" ./sfu
+        install -Dm755 "${SRC_DIR}/../build/${{ exe_name }}" "${PREFIX}/bin/${{ exe_name }}"
+
+    # ---------- Windows (cmd.exe) ----------
+    - if: win
+      then: |
+        if not exist %SRC_DIR%\..\build mkdir %SRC_DIR%\..\build
+        set CGO_ENABLED=0
+        go build -trimpath -ldflags="-s -w" ^
+          -o "%SRC_DIR%\..\build\${{ exe_name }}.exe" ./sfu
+        if not exist %LIBRARY_BIN% mkdir %LIBRARY_BIN%
+        copy /Y "%SRC_DIR%\..\build\${{ exe_name }}.exe" "%LIBRARY_BIN%\${{ exe_name }}.exe"
+
+requirements:
+  build:
+    # Pin to major.minor from webrtc/go.mod
+    - go 1.21.*
+
+tests:
+  - script:
+      - if: unix
+        then: |
+          "${PREFIX}/bin/${{ exe_name }}" -h || true
+      - if: win
+        then: |
+          "%LIBRARY_BIN%\${{ exe_name }}.exe" -h || true
+
+about:
+  summary: "SFU server for many-to-many point-cloud WebRTC conferencing"
+  license: "Apache-2.0"
