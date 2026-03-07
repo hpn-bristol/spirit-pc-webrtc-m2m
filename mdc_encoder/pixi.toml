@@ -19,7 +19,7 @@ backend.version = "*"
 extra-args = [
   "-DCMAKE_BUILD_TYPE=Release",
   "-DBUILD_SHARED_LIBS=ON",
-  "-DBUILD_TESTING=ON",
+  "-DBUILD_TESTING=ON",    # <-- will always run the tests as well
   "-DCMAKE_INSTALL_LIBDIR=lib",
 ]
 
@@ -45,12 +45,14 @@ draco      = "*"
 [environments]
 test = ["test"]
 
-[tasks.cmake]
-cmd = """
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
-cmake --build build --config Release
-"""
-default-environment = "test"
+# -- Does not work very well when we have pixi dependencies --
+# -- just rely on `pixi build` instead.
+# [tasks.cmake]
+# cmd = """
+# cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
+# cmake --build build --config Release
+# """
+# default-environment = "test"
 
 [tasks.check]
 args = [{ arg = "target", default = "." }]
@@ -62,10 +64,13 @@ cppcheck --std=c++17 --language=c++ \
 """
 default-environment = "test"
 
-[tasks.test]
-cmd = "ctest --test-dir build --output-on-failure"
-depends-on = ["cmake"]
-default-environment = "test"
+# -- Does not work very well when we have pixi dependencies --
+# -- just create a new target that always run on cmake,
+# -- so that it is automatically called when running `pixi build`
+# [tasks.test]
+# cmd = "ctest --test-dir build --output-on-failure"
+# depends-on = ["cmake"]
+# default-environment = "test"
 
 [tasks.clean]
 cmd = "rm -rf .pixi/build && cmake -E rm -rf build dist _prefix"
