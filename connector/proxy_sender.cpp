@@ -54,13 +54,13 @@ struct SendPacketHeader {
 inline string get_current_data_time() {
 	time_t now = time(0);
 	char buf[80];
-	struct tm tstruct;
+	struct tm tstruct = {};
 	localtime_s(&tstruct, &now);
 	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
 	return string(buf);
 };
 
-inline void log(string message) {
+inline void log(const string& message) {
 	string filePath = "C:\\Users\\jeroe\\GitHub\\cwipc_test\\cwipc-unity-test\\Assets\\Plugins\\" + logfile;
 	ofstream ofs(filePath.c_str(), std::ios_base::out | std::ios_base::app);
 	ofs << get_current_data_time() << '\t' << message << '\n';
@@ -82,13 +82,13 @@ int setup_connection(char* server, uint32_t port) {
 		return SocketCreationError;
 	}
 	ULONG buf_size = 524288000;
-	setsockopt(s_send, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG));
+	setsockopt(s_send, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>((char*)&buf_sizebuf_size), sizeof(ULONG));
 	si_send.sin_family = AF_INET;
 	si_send.sin_port = htons(port);
 	inet_pton(AF_INET, server, &si_send.sin_addr.S_un.S_addr);
 	char t[BUFLEN] = { 0 };
 	t[0] = 'a';
-	if (sendto(s_send, t, BUFLEN, 0, (struct sockaddr*)&si_send, slen) == SOCKET_ERROR) {
+	if (sendto(s_send, t, BUFLEN, 0, reinterpret_cast<const sockaddr*>((struct sockaddr*)&si_sendsi_send), slen) == SOCKET_ERROR) {
 		WSACleanup();
 		return SendToError;
 	}
@@ -101,7 +101,7 @@ void listen_work() {
 	// TODO: add poll for performance, maybe
 	while (keep_working) {
 		size_t size = 0;
-		if ((size = recvfrom(s_send, buf, BUFLEN, 0, (struct sockaddr*)&si_send, &slen)) == SOCKET_ERROR) {
+		if ((size = recvfrom(s_send, buf, BUFLEN, 0, reinterpret_cast<sockaddr*>(reinterpret_cast<const sockaddr*>((struct sockaddr*)&si_sendsi_send), &slensi_send), &slen)) == SOCKET_ERROR) {
 			printf("recvfrom() failed with error code : %d", WSAGetLastError());
 			exit(EXIT_FAILURE);
 		}
@@ -193,7 +193,7 @@ int send_packet(char* data, uint32_t size, uint32_t _packet_type) {
 	char buf_msg[BUFLEN] = { 0 };
 	memcpy(buf_msg, &packet_type, size);
 	memcpy(&buf_msg[sizeof(packet_type)], data, size);
-	if ((size_send = sendto(s_send, buf_msg, BUFLEN, 0, (struct sockaddr*)&si_send, slen)) == SOCKET_ERROR) {
+	if ((size_send = sendto(s_send, buf_msg, BUFLEN, 0, reinterpret_cast<const sockaddr*>((struct sockaddr*)&si_sendsi_send), slen)) == SOCKET_ERROR) {
 		return -1;
 	}
 	log("send_packet terminating while sending out " + to_string(size_send) + " bytes");
