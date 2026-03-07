@@ -36,7 +36,8 @@ std::mutex m_recv_control;
 
 static string logfile = "log.txt";
 
-enum CONNECTION_SETUP_CODE : int {
+// enum CONNECTION_SETUP_CODE : int {
+enum CONNECTION_SETUP_CODE {
 	ConnectionSuccess = 0,
 	StartUpError = 1,
 	SocketCreationError = 2,
