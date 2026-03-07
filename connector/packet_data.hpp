@@ -5,7 +5,7 @@
 // Never try something fancy like adding virtual methods or inheritence to these structs as it adds an hidden field to the struct
 // making byte copying unreliable
 struct PacketType {
-	uint32_t type;
+	uint32_t type = 0;
 
 	static constexpr auto size() {
 		return sizeof(struct PacketType);
@@ -43,12 +43,12 @@ struct PacketType {
 };
 
 struct PacketFrameHeader {
-	uint32_t track_id; // 4
-	uint32_t client_id; // 8
-	uint32_t frame_number; // 12
-	uint32_t frame_length; // 16
-	uint32_t frame_offset; // 20
-	uint32_t packet_length; // 24
+	uint32_t track_id = 0; // 4
+	uint32_t client_id = 0; // 8
+	uint32_t frame_number = 0; // 12
+	uint32_t frame_length = 0; // 16
+	uint32_t frame_offset = 0; // 20
+	uint32_t packet_length = 0; // 24
 
 
 	static constexpr auto size() {
@@ -92,13 +92,13 @@ protected:
 };
 
 struct PacketHeader {
-	uint32_t client_id;
-	uint32_t frame_number;
-	uint32_t file_length;
-	uint32_t file_offset;
-	uint32_t packet_length;
-	uint32_t capturer_id;
-	uint32_t tile_id;
+	uint32_t client_id = 0;
+	uint32_t frame_number = 0;
+	uint32_t file_length = 0;
+	uint32_t file_offset = 0;
+	uint32_t packet_length = 0;
+	uint32_t capturer_id = 0;
+	uint32_t tile_id = 0;
 
 
 	static constexpr auto size() {
@@ -143,11 +143,11 @@ protected:
 };
 
 struct AudioPacketHeader {
-	uint32_t client_id;
-	uint32_t frame_number;
-	uint32_t file_length;
-	uint32_t file_offset;
-	uint32_t packet_length;
+	uint32_t client_id = 0;
+	uint32_t frame_number = 0;
+	uint32_t file_length = 0;
+	uint32_t file_offset = 0;
+	uint32_t packet_length = 0;
 
 
 	static constexpr auto size() {
@@ -190,12 +190,12 @@ protected:
 };
 
 struct TrackStatusChangedHeader {
-	uint32_t client_id;
-	uint32_t last_frame_nr;
-	uint32_t capturer_id;
-	uint32_t tile_nr;
-	bool is_video;
-	bool is_added;
+	uint32_t client_id = 0;
+	uint32_t last_frame_nr = 0;
+	uint32_t capturer_id = 0;
+	uint32_t tile_nr = 0;
+	bool is_video = 0;
+	bool is_added = 0;
 
 	static constexpr auto size() {
 		return sizeof(struct TrackStatusChangedHeader);
@@ -213,9 +213,9 @@ struct TrackStatusChangedHeader {
 };
 
 struct CameraIntrinsicsHeader {
-	uint32_t client_id;
-	uint32_t capturer_id;
-	uint32_t capturer_type;
+	uint32_t client_id = 0;
+	uint32_t capturer_id = 0;
+	uint32_t capturer_type = 0;
 
 	static constexpr auto size() {
 		return sizeof(struct CameraIntrinsicsHeader);

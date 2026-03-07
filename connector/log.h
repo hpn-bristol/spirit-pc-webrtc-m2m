@@ -23,7 +23,7 @@ class Log {
 
 public:
 	static void log(const char* message, Color color = Color::Black);
-	static void log(const std::string message, Color color = Color::Black);
+	static void log(const std::string& message, Color color = Color::Black);
 	static void log(const int message, Color color = Color::Black);
 	static void log(const char message, Color color = Color::Black);
 	static void log(const float message, Color color = Color::Black);

@@ -12,7 +12,7 @@ void Log::log(const char* message, Color color) {
 	}
 }
 
-void Log::log(const std::string message, Color color) {
+void Log::log(const std::string& message, Color color) {
 	const char* tmsg = message.c_str();
 	if (callbackInstance != nullptr) {
 		callbackInstance(tmsg, (int)color, (int)strlen(tmsg));

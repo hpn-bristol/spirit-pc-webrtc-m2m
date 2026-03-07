@@ -7,8 +7,15 @@
 // TODO
 // AddRemoteClient function
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET (-1)
+#endif
 
-WebRTCConnection::WebRTCConnection(unsigned int port_this, unsigned int port_remote) : port_this(port_this), port_remote(port_remote)
+WebRTCConnection::WebRTCConnection(unsigned int port_this, unsigned int port_remote) :
+	port_this(port_this),
+	port_remote(port_remote),
+	s_send(INVALID_SOCKET),
+	s_recv(INVALID_SOCKET)
 {
 	// Ensure deterministic initial state without changing the header
 	is_listening_for_data = false;
@@ -23,8 +30,18 @@ WebRTCConnection::~WebRTCConnection()
 }
 
 int WebRTCConnection::connect() {
-	buf = (char*)malloc(BUFLEN);
+	// buf = (char*)malloc(BUFLEN);
+	// buf_ori = buf;
+
+	// prevent re-allocation leak
+	if (buf_ori) {
+		free(buf_ori);
+		buf_ori = nullptr;
+		buf = nullptr;
+	}
+	buf = static_cast<char*>(malloc(BUFLEN));
 	buf_ori = buf;
+
 	std::unique_lock<std::mutex> guard(m_receivers);
 	clients = std::map<uint32_t, ConnectedClient*>();
 	clients.clear();
@@ -36,7 +53,12 @@ int WebRTCConnection::connect() {
 #endif
 
 	// Generic parameters
+#ifdef WIN32
 	ULONG buf_size = 524288000;
+#else
+	int buf_size = 524288000;
+#endif
+
 	// Create send socket
 	if ((s_recv = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == SOCKET_ERROR) {
 #ifdef WIN32
@@ -55,7 +77,10 @@ int WebRTCConnection::connect() {
 	}
 
 	// Set socket options
-	if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+	// if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+	if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF,
+			reinterpret_cast<const char*>(&buf_size),
+			sizeof(buf_size)) < 0) {
 		return -1;
 	}
 	si_send.sin_family = AF_INET;
