@@ -2,6 +2,14 @@
 
 DecodedPointCloud* DracoMDCDecoder::decode_pc(char *encoded_data, uint64_t size)
 {
+    
+    // Defensive guard: do not pass null or empty buffers to Draco.
+    if (encoded_data == nullptr || size == 0) {
+        status = D_Fail;
+        // leave pc == nullptr; callers will see get_n_points() == 0
+        return pc;
+    }
+
     draco::Decoder decoder;
     draco::DecoderBuffer buf;
     

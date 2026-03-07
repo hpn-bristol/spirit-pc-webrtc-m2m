@@ -1,25 +1,24 @@
 #pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
-// Exclude rarely-used stuff from Windows headers
-#define WIN32_LEAN_AND_MEAN
-// Include Windows header files
-#include <windows.h>
-#include <winsock2.h>
-#include <Ws2tcpip.h>
-// Winsock Library
-#pragma comment(lib,"ws2_32.lib")
-
-#define DLLExport __declspec(dllexport)
+  // Exclude rarely-used stuff from Windows headers
+  #define WIN32_LEAN_AND_MEAN
+  // Include Windows header files
+  #include <windows.h>
+  #include <winsock2.h>
+  #include <Ws2tcpip.h>
+  // Winsock Library
+  #pragma comment(lib,"ws2_32.lib")
+  #define DLLExport __declspec(dllexport)
 #else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <time.h>
-#define DLLExport
-
+  #include <unistd.h>
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+  #include <errno.h>
+  #include <time.h>
+  // Ensure public API symbols are exported if default visibility gets hidden:
+  #define DLLExport __attribute__((visibility("default")))
 #endif
 
 #include <stdio.h>

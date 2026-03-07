@@ -52,7 +52,7 @@ enum LOG_LEVEL : int {
 inline string get_current_date_time(bool date_only) {
 	time_t now = time(0);
 	char buf[80];
-	struct tm tstruct;
+	std::tm tstruct{};
 #if defined(_WIN64) || defined(_WIN32)
 	localtime_s(&tstruct, &now);
 #else
@@ -98,6 +98,7 @@ void set_logging(char* log_directory, int _log_level) {
 int initialize() {
 	custom_log("initialize: inting", Default, LogColor::Orange);
 	initialized = true;
+	return 0;
 }
 
 EncodingQueue* create_encoding_queue(unsigned int max_queue) {
