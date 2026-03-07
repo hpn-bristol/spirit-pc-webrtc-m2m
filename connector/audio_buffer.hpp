@@ -31,7 +31,9 @@ public:
 		frame_number = next_audio_frame.get_frame_number();
 		guard.unlock();
 	
-		return std::move(next_audio_frame);
+		// return std::move(next_audio_frame);
+		// return by value; NRVO will elide copies
+		return next_audio_frame;
 	}
 
 	bool insert_audio_frame(ReceivedAudio& audio_frame) {
@@ -48,11 +50,11 @@ public:
 
 		return true;
 	}
-	size_t get_buffer_size() {;
+	size_t get_buffer_size() {
 		return audio_queue.size();
 	}
 
-	std::priority_queue<ReceivedAudio> get_queue() {
+	const std::priority_queue<ReceivedAudio>& get_queue() const {
 		return audio_queue;
 	}
 

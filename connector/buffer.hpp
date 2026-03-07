@@ -27,7 +27,8 @@ public:
 		}
 		frame_numbers[tile_number] = next_tile.get_frame_number();
 		guard.unlock();
-		return std::move(next_tile);
+		// return std::move(next_tile);
+		return next_tile;  // return by value
 	}
 
 	bool insert_tile(ReceivedTile& tile, uint32_t tile_number) {

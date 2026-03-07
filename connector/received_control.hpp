@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <queue>
 
 class ReceivedControl {
@@ -8,7 +9,7 @@ class ReceivedControl {
 public:
 	ReceivedControl(char* b, uint32_t _packet_len) {
 		data.resize(_packet_len);
-		std::memcpy(&data, b, _packet_len);
+		std::memcpy(data.data(), b, _packet_len);
 	}
 
 	~ReceivedControl() {}
@@ -17,11 +18,11 @@ public:
 		return data.data();
 	}
 
-	size_t get_data_length() {
+	size_t get_data_length() const {
 		return data.size();
 	}
 
-	std::vector<char> get_data_v() {
+	const std::vector<char>& get_data_v() const {
 		return data;
 	}
 

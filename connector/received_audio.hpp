@@ -39,11 +39,11 @@ public:
 	}
 
 
-	uint32_t get_frame_length() {
+	uint32_t get_frame_length() const {
 		return frame_length;
 	}
 
-	uint32_t get_current_size() {
+	uint32_t get_current_size() const {
 		return current_size;
 	}
 
@@ -55,11 +55,11 @@ public:
 		return data.size();
 	}
 
-	std::vector<char> get_data_v() {
+	const std::vector<char>& get_data_v() const {
 		return data;
 	}
 
-	uint8_t get_temp() {
+	uint8_t get_temp() const {
 		return temp;
 	}
 

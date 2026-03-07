@@ -43,11 +43,11 @@ public:
 		return tile_number;
 	}
 
-	uint32_t get_tile_length() {
+	uint32_t get_tile_length() const {
 		return tile_length;
 	}
 
-	uint32_t get_current_size() {
+	uint32_t get_current_size() const {
 		return current_size;
 	}
 
@@ -55,15 +55,15 @@ public:
 		return data.data();
 	}
 
-	size_t get_data_length() {
+	size_t get_data_length() const {
 		return data.size();
 	}
 
-	std::vector<char> get_data_v() {
+	const std::vector<char>& get_data_v() const {
 		return data;
 	}
 
-	uint8_t get_temp() {
+	uint8_t get_temp() const {
 		return temp;
 	}
 

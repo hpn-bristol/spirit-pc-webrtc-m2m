@@ -94,7 +94,7 @@ void register_intrisics_updated_callback(IntrinsicsUpdatedCallBack cb) {
 inline string get_current_date_time(bool date_only) {
 	time_t now = time(0);
 	char buf[80];
-	struct tm tstruct;
+	struct tm tstruct{};
 #if defined(_WIN64) || defined(_WIN32)
 	localtime_s(&tstruct, &now);
 #else
@@ -114,7 +114,7 @@ inline string get_current_date_time(bool date_only) {
 	This function is used to pass log messages to the user. Verbose logging can be enabled, and different colors can be
 	used to inidicate a specific function (e.g., sending or receiving data).
 */
-void custom_log(string message, int _log_level = 0, Color color = Color::Black) {
+void custom_log(const std::string& message, int _log_level = 0, Color color = Color::Black) {
 	unique_lock<mutex> guard(m_logging);
 	if (_log_level <= log_level) {
 		Log::log(message, color);
@@ -341,7 +341,10 @@ int initialize(char* ip_send, uint32_t port_send, char* ip_recv, uint32_t port_r
 	}
 
 	// Set socket options
-	if (setsockopt(s_send, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+	// if (setsockopt(s_send, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+	if (setsockopt(s_send, SOL_SOCKET, SO_RCVBUF,
+			reinterpret_cast<const char*>(&buf_size),
+			sizeof(ULONG)) < 0) {
 		custom_log("initialize: setsockopt: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
 	}
 	si_send.sin_family = AF_INET;
@@ -385,7 +388,10 @@ int initialize(char* ip_send, uint32_t port_send, char* ip_recv, uint32_t port_r
 		}
 
 		// Set socket options
-		if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+		// if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF, (char*)&buf_size, sizeof(ULONG)) < 0) {
+		if (setsockopt(s_recv, SOL_SOCKET, SO_RCVBUF,
+				reinterpret_cast<const char*>(&buf_size),
+				sizeof(ULONG)) < 0) {
 			custom_log("initialize: setsockopt: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
 		}
 		si_recv.sin_family = AF_INET;
@@ -407,7 +413,9 @@ int initialize(char* ip_send, uint32_t port_send, char* ip_recv, uint32_t port_r
 		//WSAIoctl(s_recv, SIO_UDP_CONNRESET, &bNewBehavior, sizeof bNewBehavior, NULL, 0, &dwBytesReturned, NULL, NULL);
 		// Send a message to the Golang peer, containing the number of tiles (<10 for now)
 		// TODO rework this 
-		if (sendto(s_recv, t, BUFLEN, 0, (struct sockaddr*)&si_recv, slen_recv) == SOCKET_ERROR) {
+		// if (sendto(s_recv, t, BUFLEN, 0, (struct sockaddr*)&si_recv, slen_recv) == SOCKET_ERROR) {
+		 if (sendto(s_recv, t, BUFLEN, 0,
+				reinterpret_cast<const sockaddr*>(&si_recv), slen_recv) == SOCKET_ERROR) {
 			custom_log("initialize: sendto: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
 			WSACleanup();
 			return SendToError;
@@ -477,7 +485,9 @@ void listen_for_data() {
 				char t[BUFLEN] = { 0 };
 				t[0] = (char)n_tiles;
 				custom_log("listen_for_data: connected to peer", Default, Color::Orange);
-				if (sendto(s_send, t, BUFLEN, 0, (struct sockaddr*)&si_send, slen_send) == SOCKET_ERROR) {
+				// if (sendto(s_send, t, BUFLEN, 0, (struct sockaddr*)&si_send, slen_send) == SOCKET_ERROR) {
+				if (sendto(s_send, t, BUFLEN, 0,
+						reinterpret_cast<const sockaddr*>(&si_send), slen_send) == SOCKET_ERROR) {
 					custom_log("initialize: sendto: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
 					WSACleanup();
 					return;
@@ -661,7 +671,10 @@ int send_packet(char* data, uint32_t size, uint32_t _packet_type) {
 	memcpy(&buf_msg[sizeof(packet_type)], data, size);
 
 	// Send the message to the Golang peer
-	if ((size_sent = sendto(s_send, buf_msg, BUFLEN, 0, (struct sockaddr*)&si_send, slen_send)) == SOCKET_ERROR) {
+	// if ((size_sent = sendto(s_send, buf_msg, BUFLEN, 0, (struct sockaddr*)&si_send, slen_send)) == SOCKET_ERROR) {
+	if ((size_sent = sendto(s_send, buf_msg, BUFLEN, 0,
+				reinterpret_cast<const sockaddr*>(&si_send),
+				slen_send)) == SOCKET_ERROR) {
 		custom_log("send_packet: sendto: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
 		return -1;
 	}
