@@ -1,7 +1,9 @@
 #pragma once
 
-#include "received_audio.hpp"
+#include <condition_variable>  // for std::condition_variable
+#include <mutex>               // for std::unique_lock, std::mutex
 #include <list>
+#include "received_audio.hpp"
 
 class AudioBuffer {
 

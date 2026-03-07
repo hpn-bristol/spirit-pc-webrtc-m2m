@@ -1,3 +1,4 @@
+#include <cerrno>
 #include "pch.h"
 #include "framework.h"
 #include "webrtc_connection.h"
@@ -9,7 +10,8 @@
 
 WebRTCConnection::WebRTCConnection(unsigned int port_this, unsigned int port_remote) : port_this(port_this), port_remote(port_remote)
 {
-	
+	// Ensure deterministic initial state without changing the header
+	is_listening_for_data = false;
 }
 
 WebRTCConnection::~WebRTCConnection()
@@ -23,7 +25,6 @@ WebRTCConnection::~WebRTCConnection()
 int WebRTCConnection::connect() {
 	buf = (char*)malloc(BUFLEN);
 	buf_ori = buf;
-	keep_working = true;
 	std::unique_lock<std::mutex> guard(m_receivers);
 	clients = std::map<uint32_t, ConnectedClient*>();
 	clients.clear();
@@ -65,7 +66,9 @@ int WebRTCConnection::connect() {
 	inet_pton(AF_INET, "127.0.0.1", &si_send.sin_addr.s_addr);
 #endif
 
-    worker = std::jthread(&WebRTCConnection::listen_for_data, this);
+	
+	// Start listener; std::jthread will pass a stop_token automatically
+	worker = std::jthread(&WebRTCConnection::listen_for_data, this);
 	initialized = true;
 	return ConnectionSuccess;
 }
@@ -74,8 +77,10 @@ void WebRTCConnection::disconnect()
 {
 	// TODO Send disconnect message to peer maybe
 	//WSACleanup();
-	keep_working = false;
+	// Cooperatively request the jthread to stop
+	if (worker.joinable()) { worker.request_stop(); }
 	closesocket(s_recv);
+	if (buf_ori) { free(buf_ori); buf_ori = nullptr; buf = nullptr; }
 	std::unique_lock<std::mutex> lk_recv(m_recv_data);
 	std::unique_lock<std::mutex> guard(m_send_data);
 	
@@ -97,12 +102,12 @@ int WebRTCConnection::wait_for_peer_connection() {
 	return connection_status;
 }
 
-void WebRTCConnection::listen_for_data() {
+void WebRTCConnection::listen_for_data(std::stop_token st) {
 	// Enable the listening thread to join
 	std::unique_lock<std::mutex> lk_lst(m_recv_data);
 	is_listening_for_data = true;
 	lk_lst.unlock();
-	while (keep_working) {
+	while (!st.stop_requested()) {
 
 		// Make sure only one process is listening to the socket
 		std::unique_lock<std::mutex> guard(m_recv_data);
@@ -110,11 +115,40 @@ void WebRTCConnection::listen_for_data() {
 		// Attempt to receive data from the Golang peer
 		size_t size = 0;
 
+		// if ((size = recvfrom(s_recv, buf, BUFLEN, 0, NULL, NULL)) == SOCKET_ERROR) {
+		//	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		//	continue;
+		// }
+
 		if ((size = recvfrom(s_recv, buf, BUFLEN, 0, NULL, NULL)) == SOCKET_ERROR) {
+			// After disconnect(), we request stop and close the socket:
+			// - stop_requested() tells us to exit,
+			// - closed socket yields expected OS errors:
+			//	 Windows: WSAENOTSOCK (10038), WSAEINVAL (10022)
+			//	 POSIX:   EBADF, EINVAL
+#ifdef WIN32
+			int e = WSAGetLastError();
+			if (st.stop_requested() || !initialized || e == WSAENOTSOCK || e == WSAEINVAL) {
+				guard.unlock();
+				break;
+			}
+#else
+			if (st.stop_requested() || !initialized || errno == EBADF || errno == EINVAL) {
+				guard.unlock();
+				break;
+			}
+#endif
+			// Transient error: back off a little and retry.
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
 		}
+
 		if (size == 0) {
+			// Zero-length read is rare but treat it as transient unless stopping/closed.
+			if (st.stop_requested() || !initialized) {
+				guard.unlock();
+				break;
+			}
 			continue;
 		}
 		//custom_log("listen_for_data: recvfrom: got " + std::to_string(size) + " bytes", Debug);
@@ -138,8 +172,11 @@ void WebRTCConnection::listen_for_data() {
 			//custom_log("listen_for_data: connected to peer", Default, Color::Orange);
 			if (sendto(s_recv, t, BUFLEN, 0, (struct sockaddr*)&si_send, slen_send) == SOCKET_ERROR) {
 				//custom_log("initialize: sendto: ERROR: " + std::to_string(WSAGetLastError()), Default, Color::Red);
-				WSACleanup();
-				return;
+				// WSACleanup();
+				// return;
+				// On shutdown, leave gracefully
+				guard.unlock();
+				break;
 			}
 			lk.unlock();
 			connection_status = 1;
@@ -203,20 +240,20 @@ void WebRTCConnection::listen_for_data() {
 }
 
 ConnectedClient* WebRTCConnection::find_client(unsigned int client_id) {
-    std::unique_lock<std::mutex> guard(m_receivers);
-    auto it = clients.find(client_id);
-    if (it == clients.end()) {
-        return nullptr;
-    }
-    return it->second;
+	std::unique_lock<std::mutex> guard(m_receivers);
+	auto it = clients.find(client_id);
+	if (it == clients.end()) {
+		return nullptr;
+	}
+	return it->second;
 }
 
 ConnectedClient* WebRTCConnection::add_client(unsigned int client_id) {
-    std::unique_lock<std::mutex> guard(m_receivers);
-    auto it = clients.find(client_id);
-    if (it != clients.end()) {
-        return it->second;
-    }
+	std::unique_lock<std::mutex> guard(m_receivers);
+	auto it = clients.find(client_id);
+	if (it != clients.end()) {
+		return it->second;
+	}
 	ConnectedClient* client = new ConnectedClient(this, client_id);
 	clients[client_id] = client;
 	/*std::vector<uint32_t> track_ids_uint;
@@ -226,12 +263,12 @@ ConnectedClient* WebRTCConnection::add_client(unsigned int client_id) {
 		track_ids_uint.push_back(track_id_counter);
 		track_id_counter++;
 	}
-    
+	
 	// TODO Send track mappings to golang peer
 	size_t serialized_size = 0;
 	char* serialized = serialize_tracks_name_to_id(serialized_size);
 	send_remote_client_track_packet(serialized, (uint32_t)serialized_size);*/
-    return client;
+	return client;
 }
 
 unsigned int WebRTCConnection::add_track(const std::string& track_id, bool is_video)
@@ -306,7 +343,7 @@ int WebRTCConnection::send_track_frame(unsigned int client_id, void* data, uint3
 	
 
 	// Send out packets as long as needed
-	while (remaining > 0 && keep_working) {
+	while (remaining > 0 && initialized) {
 
 		// Determine the amount of bytes to send out
 		uint32_t next_size = 0;
@@ -348,39 +385,39 @@ int WebRTCConnection::send_track_frame(unsigned int client_id, void* data, uint3
 
 
 char* WebRTCConnection::serialize_tracks_name_to_id(size_t& out_size) {
-    // Calculate total size needed
-    size_t total_size = sizeof(uint32_t); // number of entries
-    for (const auto& entry : track_name_to_id) {
-        total_size += sizeof(uint32_t); // length of trackID
-        total_size += entry.first.size(); // trackID string bytes
-        total_size += sizeof(uint32_t); // internal ID
-    }
+	// Calculate total size needed
+	size_t total_size = sizeof(uint32_t); // number of entries
+	for (const auto& entry : track_name_to_id) {
+		total_size += sizeof(uint32_t); // length of trackID
+		total_size += entry.first.size(); // trackID string bytes
+		total_size += sizeof(uint32_t); // internal ID
+	}
 
-    char* buffer = new char[total_size];
-    char* ptr = buffer;
+	char* buffer = new char[total_size];
+	char* ptr = buffer;
 
-    // Write number of entries
-    uint32_t num_entries = static_cast<uint32_t>(track_name_to_id.size());
-    memcpy(ptr, &num_entries, sizeof(uint32_t));
-    ptr += sizeof(uint32_t);
+	// Write number of entries
+	uint32_t num_entries = static_cast<uint32_t>(track_name_to_id.size());
+	memcpy(ptr, &num_entries, sizeof(uint32_t));
+	ptr += sizeof(uint32_t);
 
-    // Write each entry
-    for (const auto& entry : track_name_to_id) {
-        uint32_t track_id_len = static_cast<uint32_t>(entry.first.size());
-        memcpy(ptr, &track_id_len, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
+	// Write each entry
+	for (const auto& entry : track_name_to_id) {
+		uint32_t track_id_len = static_cast<uint32_t>(entry.first.size());
+		memcpy(ptr, &track_id_len, sizeof(uint32_t));
+		ptr += sizeof(uint32_t);
 
-        memcpy(ptr, entry.first.data(), track_id_len);
-        ptr += track_id_len;
+		memcpy(ptr, entry.first.data(), track_id_len);
+		ptr += track_id_len;
 
-        uint32_t internal_id = entry.second;
-        memcpy(ptr, &internal_id, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-    }
+		uint32_t internal_id = entry.second;
+		memcpy(ptr, &internal_id, sizeof(uint32_t));
+		ptr += sizeof(uint32_t);
+	}
 
-    out_size = total_size;
+	out_size = total_size;
 
-    return buffer;
+	return buffer;
 }
 
 /*

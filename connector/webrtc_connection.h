@@ -1,6 +1,8 @@
 #pragma once
-#include "connected_client.h"
 #include <vector>
+#include <thread>     // for std::jthread
+#include <stop_token> // for std::stop_token
+#include "connected_client.h"
 
 class WebRTCConnection
 {
@@ -15,7 +17,7 @@ public:
 	std::vector<unsigned int> add_tracks(unsigned int client_id, char* const* track_ids, uint8_t* is_video, size_t count);
 	int send_track_frame(unsigned int client_id, void* data, uint32_t size, uint32_t internal_id, uint32_t frame_nr);
 private:
-	bool is_listening_for_data;
+	bool is_listening_for_data = false;
 	int connection_status = -1;
 	unsigned int port_this;
 	unsigned int port_remote;
@@ -29,7 +31,6 @@ private:
 	int slen_recv = sizeof(si_recv);
 	char* buf = NULL;
 	char* buf_ori = NULL;
-	bool keep_working = false;
 	std::mutex m_receivers;
 	std::mutex m_recv_data;
 	std::mutex m_send_data;
@@ -48,7 +49,7 @@ private:
 	#endif
 
 	
-	void listen_for_data();
+	void listen_for_data(std::stop_token st);
 	ConnectedClient* find_client(unsigned int client_id);
 	
 	

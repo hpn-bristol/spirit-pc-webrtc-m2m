@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>  // for std::memcpy
 #include <iostream>
 #include <queue>
 #include <stdio.h>
