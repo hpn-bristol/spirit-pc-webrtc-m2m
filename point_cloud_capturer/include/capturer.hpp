@@ -1,32 +1,17 @@
 #pragma once
+
+#include "capturer_types.h"
+#include "frame_types.h"
+
 #include <librealsense2/rs.hpp>
 #include "framework.h"
 #include "framebuffer.hpp"
 #include "point_cloud.hpp"
 #include "raw_frame.hpp"
 #include "frame.hpp"
+
 #include <mutex>
 #include <thread>
-
-enum CAPTURE_TYPE : int {
-    Artifical = 0,
-    RealSense = 1,
-    PrerecordedRealSense = 2,
-    Kinect = 3,
-    PrerecordedKinect = 4,
-    PlyFiles = 5
-};
-
-enum CAPTURER_SETUP_CODE : int {
-	StartedCorrectly = 0,
-	CameraDisconnected = 1,
-	BackendError = 2,
-	InvalidValue = 3,
-	WrongApiCallSeq = 4,
-	NotImpl = 5,
-	DeviceInRecovery = 6,
-	UnknownException = 7
-};
 
 #pragma pack(push, 1)
 struct ArtificialCalibration {
@@ -87,7 +72,7 @@ struct KinectCalibration {
 
 class Capturer;
 extern "C" {
-    typedef void(*FrameReadyCallback)(unsigned int capturer_id, Frame* frame_ptr, bool is_frame_valid);
+    // typedef void(*FrameReadyCallback)(unsigned int capturer_id, Frame* frame_ptr, bool is_frame_valid);
 
     DLLExport void register_frame_ready_callback(Capturer* cap, FrameReadyCallback cb);
 }

@@ -26,7 +26,11 @@ CAPTURER_SETUP_CODE RS2Capturer::init()
 		{
 			auto range = depth_sensor->get_option_range(RS2_OPTION_LASER_POWER);
 			depth_sensor->set_option(RS2_OPTION_LASER_POWER, range.max); // Set max power
+			#ifdef _WIN32
 			Sleep(1);
+			#else
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			#endif
 			std::cout << "laser power " << range.max << std::endl;
 			//depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
 		}

@@ -36,5 +36,5 @@ class PlyCapturer : public Capturer {
         const std::string directory_path;
         std::vector<std::string> ply_files = {};
         std::chrono::milliseconds interframe_delay;
-        std::chrono::steady_clock::time_point previous_time;
+        std::chrono::high_resolution_clock::time_point previous_time;
 };

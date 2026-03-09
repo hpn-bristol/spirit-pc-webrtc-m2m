@@ -1,20 +1,39 @@
 #pragma once
-#include "point_cloud.hpp"
-#include "raw_frame.hpp"
-#include "raw_converter.hpp"
-#include "capturer.hpp"
-#include "multi_capturer/multi_capturer.hpp"
-#ifdef WIN32
-#define DLLExport __declspec(dllexport)
-#else
-#define DLLExport
+
+//#include "point_cloud.hpp"
+//#include "raw_frame.hpp"
+//#include "raw_converter.hpp"
+//#include "capturer.hpp"
+//#include "multi_capturer/multi_capturer.hpp"
+
+#include "framework.h"
+#include "point_cloud_data.h"
+#include "capturer_types.h"
+#include "frame_types.h"
+
+#ifndef DLLExport
+#  if defined(_WIN32) || defined(_WIN64)
+#    define DLLExport __declspec(dllexport)
+#  else
+#    define DLLExport __attribute__((visibility("default")))
+#  endif
 #endif
 
 // All exported functions should be declared here
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  // ----- Opaque data types for Public API -----
+	typedef struct Capturer Capturer;
+	typedef struct MultiCapturer MultiCapturer;
+	typedef struct Frame Frame;
+	typedef struct RawFrame RawFrame;
+	typedef struct PointCloud PointCloud;
+	typedef struct RawConverter  RawConverter;
+  // --------------------------------------------
+
 	DLLExport void set_logging(char* log_directory, int _log_level);
-	
 	
 	
 	// Single Capturer functions
@@ -85,4 +104,7 @@ extern "C"
 	DLLExport void free_multi_capturer(MultiCapturer* capturer);
 	
 	DLLExport void clean_up();
+
+#ifdef __cplusplus
 }
+#endif

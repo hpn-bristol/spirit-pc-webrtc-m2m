@@ -85,8 +85,8 @@ void RS2RawConverter::convert_raw(uint16_t *depth, uint8_t *color, Vector3 *p_ou
             float u = tex_coords[i].u;
             float v = tex_coords[i].v;
             
-            int texture_x = (std::min)((std::max)(unsigned int(u * width + .5f), unsigned int (0)), width - 1);
-            int texture_y = (std::min)((std::max)(unsigned int(v * height + .5f), unsigned int (0)), height - 1);
+            int texture_x = (std::min)((std::max)(static_cast<unsigned int>(u * width + .5f), 0u), width - 1);
+            int texture_y = (std::min)((std::max)(static_cast<unsigned int>(v * height + .5f), 0u), height - 1);
 
             int bytes = texture_x * bpp;   // Get # of bytes per pixel
             int strides = texture_y * sib; // Get line width in bytes

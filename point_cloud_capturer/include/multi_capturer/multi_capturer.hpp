@@ -1,5 +1,7 @@
 #pragma once
 #include "capturer.hpp"
+#include "capturer_types.h"
+#include "frame_types.h"
 #include <mutex>
 #include <thread>
 #include <vector>

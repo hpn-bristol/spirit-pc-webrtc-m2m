@@ -1,16 +1,18 @@
 #pragma once
 #include "framework.h"
-struct Vector3 {
-    float x;
-    float y;
-    float z;
-};
-struct Color32 {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
-};
+#include "point_cloud_data.h"
+
+// struct Vector3 {
+//     float x;
+//     float y;
+//     float z;
+// };
+// struct Color32 {
+//     unsigned char r;
+//     unsigned char g;
+//     unsigned char b;
+//     unsigned char a;
+// };
 class RawConverter {
     public:
         RawConverter(void* cal) {}

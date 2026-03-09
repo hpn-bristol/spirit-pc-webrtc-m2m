@@ -23,7 +23,9 @@ CAPTURER_SETUP_CODE PlyCapturer::init()
 CAPTURER_SETUP_CODE PlyCapturer::capture_next_frame()
 {
     // TODO sleep
+    #ifdef _WIN32
     timeBeginPeriod(1);
+    #endif
     auto temp_frame = get_single_frame(); // Get frame first so sleep can be changed based on processing time
     auto current_time = std::chrono::high_resolution_clock::now(); // Get the end time of the loop
     auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - previous_time); // Calculate the elapsed time in milliseconds
@@ -34,7 +36,9 @@ CAPTURER_SETUP_CODE PlyCapturer::capture_next_frame()
     }
     previous_time = std::chrono::high_resolution_clock::now();
     // Need to call end here for optimisation
+    #ifdef _WIN32
     timeEndPeriod(1);
+    #endif
     if(temp_frame == nullptr) {
         return CAPTURER_SETUP_CODE::BackendError;
     }

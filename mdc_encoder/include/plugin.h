@@ -10,32 +10,32 @@
 #  endif
 #endif
 
-// --------- Aditions ---------
-
-typedef struct EncodingQueue   EncodingQueue;
-typedef struct DracoMDCDecoder DracoMDCDecoder;
-// typedef struct DracoMDCEncoder DracoMDCEncoder;
-typedef struct Description     Description;
-typedef struct PointCloud      PointCloud;
-
-typedef void (*DescriptionDoneCallback)(
-	Description* dsc,
-	char*        raw_data_ptr,
-	uint32_t     n_points_in_total,
-	uint32_t     dsc_size,
-	uint32_t     capturer_id,
-	uint32_t     frame_nr,
-	uint32_t     dsc_nr,
-	uint64_t     timestamp);
-
-typedef void (*FreePointCloudCallback)(PointCloud* pc);
-
-// ----------------------------
-
 // All exported functions should be declared here
-extern "C"
-{
-	// -----
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  // --------- Aditions ---------
+  
+  typedef struct EncodingQueue   EncodingQueue;
+  typedef struct DracoMDCDecoder DracoMDCDecoder;
+  // typedef struct DracoMDCEncoder DracoMDCEncoder;
+  typedef struct Description     Description;
+  typedef struct PointCloud      PointCloud;
+  
+  typedef void (*DescriptionDoneCallback)(
+  	Description* dsc,
+  	char*        raw_data_ptr,
+  	uint32_t     n_points_in_total,
+  	uint32_t     dsc_size,
+  	uint32_t     capturer_id,
+  	uint32_t     frame_nr,
+  	uint32_t     dsc_nr,
+  	uint64_t     timestamp);
+
+  typedef void (*FreePointCloudCallback)(PointCloud* pc);
+
 	DLLExport void register_description_done_callback(EncodingQueue* enc_queue, DescriptionDoneCallback cb);
 	DLLExport void register_free_pc_callback(EncodingQueue* enc_queue, FreePointCloudCallback cb);
 	// -----
@@ -56,4 +56,7 @@ extern "C"
 	DLLExport void free_decoder(DracoMDCDecoder* dec);
 	DLLExport void free_description(Description* dsc);
 
+
+#ifdef __cplusplus
 }
+#endif

@@ -1,7 +1,10 @@
 #pragma once
 #include <librealsense2/rs.hpp>
 #include "framework.h"
+#include "frame_types.h"
 #include "capturer.hpp"
+#include "capturer_types.h"
+
 struct ArtificalCaptureSettings {
     unsigned int side_size;
 };
@@ -33,5 +36,5 @@ class ArtificalCapturer : public Capturer {
     private:
         unsigned int side_size;
         std::chrono::milliseconds interframe_delay;
-        std::chrono::steady_clock::time_point previous_time;
+        std::chrono::high_resolution_clock::time_point previous_time;
 };

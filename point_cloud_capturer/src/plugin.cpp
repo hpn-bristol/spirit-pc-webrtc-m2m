@@ -18,8 +18,12 @@
 #include "raw_frame.hpp"
 #include "artificical_raw_converter.hpp"
 #include "rs2_raw_converter.hpp"
-#include "prerecorded_kinect_capturer.hpp"
-#include "kinect_raw_converter.hpp"
+
+#ifdef HAS_K4A
+#  include "prerecorded_kinect_capturer.hpp"
+#  include "kinect_raw_converter.hpp"
+#endif
+
 #include "capturer_factory.hpp"
 #include "utils/point_cloud_utils.hpp"
 using namespace std;
@@ -174,10 +178,12 @@ RawConverter* create_new_raw_converter(CAPTURE_TYPE type, void* cal) {
 			Log::custom_log("create_new_raw_converter: Creating realsense2 raw converter", LOG_LEVEL::Default, LogColor::Orange);
 			return new RS2RawConverter(cal);
 		}
+		#ifdef HAS_K4A
 		case CAPTURE_TYPE::PrerecordedKinect: {
 			Log::custom_log("create_new_raw_converter: Creating prerecorded kinect raw converter", LOG_LEVEL::Default, LogColor::Orange);
 			return new KinectRawConverter(cal);
 		}
+		#endif
 		default: {
 			Log::custom_log("create_new_raw_converter: Invalid capture type", LOG_LEVEL::Default, LogColor::Red);
 			return nullptr;
@@ -219,10 +225,12 @@ void free_capturer_calibration(CAPTURE_TYPE type, void* cal) {
 			RS2Capturer::free_calibration(cal);
 			break;
 		}
+		#ifdef HAS_K4A
 		case CAPTURE_TYPE::PrerecordedKinect: {
 			PrerecordedKinectCapturer::free_calibration(cal);
 			break;
 		}
+		#endif
 		default: {
 			Log::custom_log("free_capturer_calibration: Invalid capture type", LOG_LEVEL::Default, LogColor::Red);
 			break;

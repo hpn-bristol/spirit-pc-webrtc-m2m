@@ -62,7 +62,9 @@ CAPTURER_SETUP_CODE PrerecordedKinectCapturer::capture_next_frame()
 
 void PrerecordedKinectCapturer::wait_for_next_frame()
 {
+    #ifdef _WIN32
     timeBeginPeriod(1);
+    #endif
     auto current_time = std::chrono::high_resolution_clock::now(); // Get the end time of the loop
     auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - previous_time); // Calculate the elapsed time in milliseconds
     
@@ -72,7 +74,9 @@ void PrerecordedKinectCapturer::wait_for_next_frame()
     }
     previous_time = std::chrono::high_resolution_clock::now();
     // Need to call end here for optimisation
+    #ifdef _WIN32
     timeEndPeriod(1);
+    #endif
 }
 
 void PrerecordedKinectCapturer::fastforward_x_frames(unsigned int x)

@@ -4,26 +4,30 @@
 // Exclude rarely-used stuff from Windows headers
 
 
-#define WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
 
 
 // Include Windows header files
 
-#include <windows.h>
-#include <mmsystem.h>
-#pragma comment(lib,"winmm.lib")
+#  include <windows.h>
+#  include <mmsystem.h>
+#  pragma comment(lib,"winmm.lib")
 // Winsock Library
-#pragma comment(lib,"ws2_32.lib")
+#  pragma comment(lib,"ws2_32.lib")
 
-#define DLLExport __declspec(dllexport)
+#  ifndef DLLExport
+#    define DLLExport __declspec(dllexport)
+#  endif
+
 #else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <time.h>
-#define DLLExport
+
+#  include <unistd.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <arpa/inet.h>
+#  include <errno.h>
+#  include <time.h>
+#  define DLLExport __attribute__((visibility("default")))
 
 #endif
 

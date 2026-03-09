@@ -2,23 +2,13 @@
 #include <vector>
 #include <chrono>
 #include "point_cloud_data.h"
+#include "frame_types.h"
+
 class PointCloud;
 class RawFrame; 
 struct Point {
     float x, y, z;
     uint8_t r, g, b;
-};
-enum FrameMode {
-    RealData = 0,
-    RawData = 1,
-    Both = 2,
-};
-
-struct FrameCleanupSettings {
-    unsigned int blackout_block_size;
-    bool should_apply_depth_filter;
-    bool should_cleanup_depth;
-    bool should_blackout;
 };
 
 
