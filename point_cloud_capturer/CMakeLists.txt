@@ -135,5 +135,36 @@ configure_file(
   @ONLY
 )
 
-# Testing hook (optional): consumers can call `ctest` after build
-enable_testing()
+# ---- CTest: minimal API smoke test ----
+include(CTest)  # defines BUILD_TESTING and calls enable_testing() by default
+if(BUILD_TESTING)
+  set(PC_TESTS
+    test_plugin_artificial_realdata
+    test_multicapturer_callbacks
+    test_framebuffer_basic
+    test_calibration_invariants
+    test_single_callback_min
+  )
+  foreach(test_name IN LISTS PC_TESTS)
+    set(test_src "${CMAKE_CURRENT_SOURCE_DIR}/tests/${test_name}.cpp")
+
+    add_executable(${test_name} "${test_src}")
+    target_include_directories(${test_name} PRIVATE
+      "${CMAKE_CURRENT_SOURCE_DIR}/include"
+      "${CMAKE_CURRENT_SOURCE_DIR}/include/utils"
+      "${CMAKE_CURRENT_SOURCE_DIR}/include/multi_capturer"
+      "${CMAKE_CURRENT_SOURCE_DIR}/include/external/plywoot"
+    )
+    target_link_libraries(${test_name} PRIVATE point_cloud_capturer)
+
+    add_test(NAME ${test_name} COMMAND $<TARGET_FILE:${test_name}>)
+    set_tests_properties(${test_name} PROPERTIES TIMEOUT 10)
+  endforeach()
+
+  # Convenience target: run tests at build time (optional)
+  add_custom_target(run_tests ALL
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS ${PC_TESTS}
+  )
+endif()
