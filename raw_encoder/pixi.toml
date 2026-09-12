@@ -1,0 +1,56 @@
+[workspace]
+name      = "raw_encoder"
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+preview   = ["pixi-build"]
+channels  = [
+  "https://prefix.dev/pixi-build-backends",
+  "https://prefix.dev/conda-forge",
+]
+
+[package]
+name    = "raw_encoder"
+version = "0.1.0"
+
+[package.build]
+backend.name    = "pixi-build-cmake"
+backend.version = "*"
+
+[package.build.config]
+extra-args = [
+  "-DCMAKE_BUILD_TYPE=Release",
+  "-DBUILD_SHARED_LIBS=ON",
+  "-DBUILD_TESTING=ON",
+  "-DCMAKE_INSTALL_LIBDIR=lib",
+]
+
+# Build tools used by the generator (pkg-config preferred discovery path)
+[package.build-dependencies]
+cmake      = "*"
+ninja      = "*"
+pkg-config = "*"
+
+# Build deps (Headers + compile/link-time libraries)
+[package.host-dependencies]
+libjpeg-turbo = "*"
+libwebp      = "*"
+zstd          = "*"
+# zdepth        = "*"  => not available on conda-forge, vendored
+
+# Runtime-shared deps (dynamic linking)
+[package.run-dependencies]
+libjpeg-turbo = "*"
+libwebp      = "*"
+zstd          = "*"
+# zdepth        = "*"  => not available on conda-forge, vendored
+
+[feature.test.dependencies]
+cmake      = "*"
+ninja      = "*"
+pkg-config = "*"
+
+[environments]
+test = ["test"]
+
+[tasks.clean]
+cmd = "rm -rf .pixi/build && cmake -E rm -rf build dist _prefix"
+default-environment = "test"
