@@ -1,3 +1,4 @@
+#include <string>
 #include "color/jpeg/jpeg_encoder.hpp"
 #include "log.h"
 #include "logging/logging_macros.hpp"

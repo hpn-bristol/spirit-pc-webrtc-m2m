@@ -1,61 +1,112 @@
-cmake_minimum_required(VERSION 3.18)
-option(ENABLE_VCPKG OFF)
-add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# Define the project name and the type of project
-project(spirit_idlab_raw LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.20)
 
-# Set the version of the library
-set(spirit_idlab_raw_VERSION_MAJOR 1)
-set(spirit_idlab_raw_VERSION_MINOR 0)
-set(spirit_idlab_raw_VERSION_PATCH 0)
+project(raw_encoder LANGUAGES C CXX)
 
-# Specify the C++ standard
+# ---- Language standard ----
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(BUILD_SHARED_LIBS ON)
 
-# Add the include directory
-include_directories(include)
+# ---- Options ----
+option(VENDOR_ZDEPTH "Vendor Zdepth internally (exception to no-vendoring rule)" ON)
 
-# Add the source directory
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# ---- Portable install dirs ----
+include(GNUInstallDirs)
 
-# Set the output directory for the DLL
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# ---- Sources ----
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
-# Add the library target
+# Windows-only DllMain
+if(NOT WIN32)
+  list(FILTER SOURCES EXCLUDE REGEX ".*/dllmain\\.cpp$")
+endif()
+
 add_library(spirit_idlab_raw SHARED ${SOURCES})
 
-# Set the version properties for the library
-set_target_properties(spirit_idlab_raw PROPERTIES
-    VERSION ${spirit_idlab_raw_VERSION_MAJOR}.${spirit_idlab_raw_VERSION_MINOR}.${spirit_idlab_raw_VERSION_PATCH}
-    SOVERSION ${spirit_idlab_raw_VERSION_MAJOR}
+target_include_directories(spirit_idlab_raw
+  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+# ---- Threads (portable) ----
+find_package(Threads REQUIRED)
+target_link_libraries(spirit_idlab_raw PRIVATE Threads::Threads)
+
+# ---- Third-party deps via pkg-config ----
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(JPEG REQUIRED libturbojpeg)
+pkg_check_modules(WEBP REQUIRED libwebp)
+pkg_check_modules(ZSTD REQUIRED libzstd)
+
+target_include_directories(spirit_idlab_raw PRIVATE
+  "${JPEG_PREFIX}/include"
+  "${WEBP_PREFIX}/include"
+  "${ZSTD_PREFIX}/include"
 )
 
-# Set the CMake module path to find the custom FindREALSENSE2.cmake
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
+target_link_libraries(spirit_idlab_raw PRIVATE
+  ${JPEG_LIBRARIES}
+  ${WEBP_LIBRARIES}
+  ${ZSTD_LIBRARIES}
+)
 
-# Find the DRACO library
-find_package(libjpeg-turbo REQUIRED)
-message(${libjpeg-turbo_INCLUDE_DIRS})
-message(${libjpeg-turbo_LIBRARIES})
+target_compile_options(spirit_idlab_raw PRIVATE
+  ${JPEG_CFLAGS_OTHER}
+  ${WEBP_CFLAGS_OTHER}
+  ${ZSTD_CFLAGS_OTHER}
+)
 
-find_package(webp REQUIRED)
-message(${webp_INCLUDE_DIRS})
-message(${webp_LIBRARIES})
+target_link_options(spirit_idlab_raw PRIVATE
+  ${JPEG_LDFLAGS_OTHER}
+  ${WEBP_LDFLAGS_OTHER}
+  ${ZSTD_LDFLAGS_OTHER}
+)
 
-find_package(zstd REQUIRED)
-message(${zstd_INCLUDE_DIRS})
-message(${zstd_LIBRARIES})
+# ---- Zdepth (vendored via FetchContent) ----
+if(VENDOR_ZDEPTH)
+  include(FetchContent)
 
-find_package(zdepth REQUIRED)
-message(${zdepth_INCLUDE_DIRS})
-message(${zdepth_LIBRARIES})
+  FetchContent_Declare(
+    zdepth
+    GIT_REPOSITORY https://github.com/catid/Zdepth.git
+    GIT_TAG abc01e7
+  )
 
+  FetchContent_MakeAvailable(zdepth)
 
-# Include REALSENSE2 directories
-include_directories(${libjpeg-turbo_INCLUDE_DIRS} ${webp_INCLUDE_DIRS} ${zstd_INCLUDE_DIRS} ${zdepth_INCLUDE_DIRS})
+  target_include_directories(spirit_idlab_raw PRIVATE
+    "${zdepth_SOURCE_DIR}/src")
+  target_link_libraries(spirit_idlab_raw PRIVATE zdepth)
+  target_compile_definitions(spirit_idlab_raw PRIVATE RAW_ENCODER_ENABLE_ZDEPTH=1)
+else()
+  target_compile_definitions(spirit_idlab_raw PRIVATE RAW_ENCODER_ENABLE_ZDEPTH=0)
+endif()
 
+# ---- Install (Unity-ready, relocatable) ----
+install(TARGETS spirit_idlab_raw
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}   # .dll on Windows
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .so/.dylib
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
-# Link the DRACO library to the DLL
-target_link_libraries(spirit_idlab_raw ${libjpeg-turbo_LIBRARIES} ${webp_LIBRARIES} ${zstd_LIBRARIES} ${zdepth_LIBRARIES})
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/raw_encoder
+)
+
+# ---- Tests: minimal link-only smoke test ----
+include(CTest)
+
+# ---- Tests: minimal link-only smoke test ----
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(api_smoke tests/api_smoke.cpp)
+  target_include_directories(api_smoke PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_link_libraries(api_smoke PRIVATE spirit_idlab_raw)
+
+  add_test(NAME api_smoke COMMAND $<TARGET_FILE:api_smoke>)
+
+  add_custom_target(run_tests ALL
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS api_smoke
+  )
+endif()

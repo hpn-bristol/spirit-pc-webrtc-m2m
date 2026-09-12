@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 #include <turbojpeg.h>
 #include "raw_frame.hpp"
